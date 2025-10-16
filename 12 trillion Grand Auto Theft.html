@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>12 Trillion Grand — Interactive Hyper-Real Playground</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --glass: rgba(255,255,255,0.06);
+      --accent:#ff6b6b; --accent2:#7b61ff; --muted: #9aa6b2;
+      --panel-radius:18px; --glass-border:1px solid rgba(255,255,255,0.06);
+      --ui-padding:14px;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI';background:radial-gradient(1200px 600px at 10% 10%, rgba(123,97,255,0.08), transparent), linear-gradient(180deg,#071019 0%, #0d1116 60%);color:#e6eef6}
+    .app{display:grid;grid-template-columns:360px 1fr;gap:18px;height:100vh;padding:18px;box-sizing:border-box}
+
+    /* LEFT NAV PANEL */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:20px;padding:18px;backdrop-filter: blur(6px);box-shadow: 0 8px 30px rgba(2,6,23,0.6);overflow:auto}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow: 0 6px 30px rgba(123,97,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{font-size:16px;margin:0}
+    p.small{color:var(--muted);font-size:12px;margin-top:6px}
+    .nav{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+    .nav button{background:transparent;border:0;color:inherit;padding:10px;border-radius:12px;text-align:left;cursor:pointer}
+    .nav button:hover{background:rgba(255,255,255,0.02)}
+
+    /* CENTRAL CANVAS AREA */
+    .stage{position:relative;border-radius:20px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(0,0,0,0.08));overflow:hidden}
+    /* top HUD */
+    .hud{display:flex;gap:12px;align-items:center}
+    .search{flex:1;display:flex;gap:8px;align-items:center;background:var(--glass);padding:8px;border-radius:12px;border:var(--glass-border)}
+    .search input{flex:1;background:transparent;border:0;color:inherit;outline:none}
+
+    /* Scene */
+    .scene{position:absolute;inset:0;pointer-events:none}
+    .parallax-layer{position:absolute;inset:0}
+    .mountains{position:absolute;bottom:-10%;left:-10%;width:120%;height:60%;background:linear-gradient(180deg,#05101800,#051018);filter:blur(30px);opacity:.6}
+
+    /* draggable panels */
+    .panel{position:absolute;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--panel-radius);padding:var(--ui-padding);min-width:220px;min-height:120px;border:var(--glass-border);box-shadow:0 8px 30px rgba(2,6,23,0.6);pointer-events:auto}
+    .panel .title{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:8px}
+    .panel .body{font-size:13px;color:var(--muted)}
+    .handle{cursor:grab}
+    .resizer{position:absolute;width:14px;height:14px;right:8px;bottom:8px;border-radius:4px;cursor:se-resize}
+
+    /* pinball canvas */
+    #pinball{width:420px;height:300px;background:radial-gradient(circle at 10% 20%, rgba(255,255,255,0.02), transparent),linear-gradient(180deg,#071018,#041018);border-radius:12px}
+
+    /* hiking map */
+    .hike-map{width:520px;height:280px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0b1a13,#061018);display:flex;align-items:center;justify-content:center}
+
+    /* statues row */
+    .statues{display:flex;gap:12px;flex-wrap:wrap}
+    .statue{width:120px;height:160px;border-radius:10px;background:linear-gradient(180deg,#101217,#191b22);display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+    /* wine modal */
+    .wine-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.7));}
+    .wine-card{width:720px;padding:20px;border-radius:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.6));}
+
+    /* tiktok-style feed */
+    .tiktok-feed{height:520px;overflow:auto;border-radius:12px}
+    .tt-card{height:520px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+
+    /* observers overlay */
+    .observers{position:absolute;right:12px;top:12px;width:220px;height:420px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:10px;overflow:auto}
+    .observer{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .eye{width:28px;height:28px;border-radius:8px;background:linear-gradient(180deg,#222,#111);display:flex;align-items:center;justify-content:center}
+
+    /* footer */
+    .footer{position:absolute;left:18px;bottom:18px;color:var(--muted);font-size:12px}
+
+    /* small utilities */
+    .btn{padding:8px 12px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:0;color:white;cursor:pointer}
+    .glass-btn{background:transparent;border:var(--glass-border);color:var(--muted);padding:8px;border-radius:10px}
+
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">12T</div>
+        <div>
+          <h1>12 Trillion Grand</h1>
+          <p class="small">an experimental playground — theft, hike, statues, pinball, wine, planning & more</p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button id="btn-pinball">Toggle Pinball Panel</button>
+        <button id="btn-hike">Open Hike Map</button>
+        <button id="btn-statues">Generate Statues</button>
+        <button id="btn-wine">Launch Ultimate Wine Tasting</button>
+        <button id="btn-morse">Morse Code Lab</button>
+        <button id="btn-tiktok">Open TikTok Feed</button>
+        <button id="btn-urban">Urban Planning Grid</button>
+        <button id="btn-observers">Observers Simulation</button>
+      </div>
+
+      <div style="margin-top:18px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="search" placeholder="Search the Grand..." style="flex:1;padding:8px;border-radius:10px;border:var(--glass-border);background:transparent;color:inherit" />
+          <button class="glass-btn" id="save-snapshot">Snapshot</button>
+        </div>
+        <p class="small">Tip: drag any panel by its top bar. You can resize them with the bottom-right handle.</p>
+      </div>
+    </aside>
+
+    <main class="stage" id="stage">
+      <div class="hud">
+        <div class="search"><input placeholder="Focus on a subgame, e.g. pinball, wine, hike..." id="focusInput" /></div>
+        <button class="btn" id="randomize">Randomize Scene</button>
+      </div>
+
+      <div class="scene" id="scene">
+        <div class="parallax-layer mountains"></div>
+      </div>
+
+      <!-- Panels (created by JS) -->
+      <div id="panels-root"></div>
+
+      <div class="observers" id="observersPane"><strong style="display:block;margin-bottom:8px">Observers</strong></div>
+
+      <div class="footer">© 12 Trillion Grand — interactive demo</div>
+
+      <!-- Wine modal -->
+      <div class="wine-modal" id="wineModal">
+        <div class="wine-card">
+          <h2>Ultimate Wine Tasting Event</h2>
+          <p class="small">An immersive guided tasting with notes, aroma wheel, random pairings and a palate-scorer. Use your device audio for ambience.</p>
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <div style="flex:1">
+              <label>Choose a varietal</label>
+              <select id="wineSelect" style="width:100%;padding:10px;border-radius:8px;background:transparent;border:var(--glass-border)">
+                <option>Chardonnay — Limestone Reserve</option>
+                <option>Pinot Noir — Echo Hills</option>
+                <option>Cabernet Sauvignon — Iron Ridge</option>
+                <option>Natural Orange — Sun Ferment</option>
+              </select>
+            </div>
+            <div style="width:220px;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+              <button class="btn" id="wineStart">Begin Tasting</button>
+              <button class="glass-btn" id="wineClose">Close</button>
+            </div>
+          </div>
+          <div id="wineNotes" style="margin-top:16px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    /* Utility: create draggable, resizable panels */
+    function createPanel({id,title,left=120,top=120,width=360,height=220,html=''}){
+      const p = document.createElement('div'); p.className='panel'; p.id=id;
+      p.style.left = left+'px'; p.style.top = top+'px'; p.style.width=width+'px'; p.style.height=height+'px';
+      p.innerHTML = `<div class="title handle"><span>${title}</span><div><button class='glass-btn' data-close>Close</button></div></div><div class='body'>${html}</div><div class='resizer'></div>`;
+      document.getElementById('panels-root').appendChild(p);
+
+      // drag
+      const handle = p.querySelector('.handle');
+      handle.addEventListener('pointerdown', startDrag);
+      let dx=0, dy=0, startX=0, startY=0;
+      function startDrag(e){
+        e.preventDefault(); handle.setPointerCapture(e.pointerId);
+        startX = e.clientX; startY = e.clientY; dx = p.offsetLeft; dy = p.offsetTop;
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', endDrag);
+      }
+      function onMove(e){
+        const nx = dx + (e.clientX - startX); const ny = dy + (e.clientY - startY);
+        p.style.left = nx+'px'; p.style.top = ny+'px';
+      }
+      function endDrag(e){ handle.releasePointerCapture(e.pointerId); handle.removeEventListener('pointermove', onMove); handle.removeEventListener('pointerup', endDrag); }
+
+      // resize
+      const r = p.querySelector('.resizer'); let startW, startH;
+      r.addEventListener('pointerdown', startResize);
+      function startResize(e){ e.preventDefault(); r.setPointerCapture(e.pointerId); startW = p.offsetWidth; startH = p.offsetHeight; startX = e.clientX; startY = e.clientY; r.addEventListener('pointermove', doResize); r.addEventListener('pointerup', endResize); }
+      function doResize(e){ const nw = Math.max(220, startW + (e.clientX - startX)); const nh = Math.max(120, startH + (e.clientY - startY)); p.style.width = nw+'px'; p.style.height = nh+'px'; }
+      function endResize(e){ r.releasePointerCapture(e.pointerId); r.removeEventListener('pointermove', doResize); r.removeEventListener('pointerup', endResize); }
+
+      // close
+      p.querySelector('[data-close]').addEventListener('click', ()=>p.remove());
+      return p;
+    }
+
+    /* PINBALL: simple canvas physics */
+    function openPinball(){
+      if(document.getElementById('pinballPanel')) return;
+      const html = `<canvas id='pinball' width=840 height=600></canvas>`;
+      const panel = createPanel({id:'pinballPanel',title:'Pinball Pavilion',left:420,top:80,width:480,height:350,html:html});
+      const canvas = panel.querySelector('#pinball'); const ctx = canvas.getContext('2d'); canvas.width=420; canvas.height=300;
+      // simple bumpers and ball
+      const ball = {x:200,y:60,r:8,vx:2.8,vy:3.6};
+      const bumpers = [{x:80,y:120,r:28},{x:200,y:160,r:38},{x:330,y:120,r:24}];
+      function step(){ ctx.clearRect(0,0,canvas.width,canvas.height);
+        // background
+        const g = ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#0b151a'); g.addColorStop(1,'#021018'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+        // bumpers
+        bumpers.forEach(b=>{ ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.03)'; ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.stroke(); });
+        // ball physics
+        ball.x += ball.vx; ball.y += ball.vy; ball.vy += 0.06; // gravity
+        // walls
+        if(ball.x<ball.r||ball.x>canvas.width-ball.r) ball.vx*=-1.01;
+        if(ball.y<ball.r) ball.vy*=-1.01;
+        if(ball.y>canvas.height-ball.r){ ball.y=canvas.height-ball.r; ball.vy*=-0.8; ball.vx*=0.98; }
+        // bumpers collisions
+        bumpers.forEach(b=>{ const dx=ball.x-b.x, dy=ball.y-b.y, d=Math.hypot(dx,dy); if(d<ball.r+b.r){ const nx=dx/d, ny=dy/d, p = ball.vx*nx + ball.vy*ny; ball.vx -= 2*p*nx; ball.vy -= 2*p*ny; ball.vx*=1.03; ball.vy*=1.03; } });
+        // draw ball
+        ctx.beginPath(); ctx.fillStyle='white'; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* HIKE MAP: simple procedural trail */
+    function openHike(){ if(document.getElementById('hikePanel')) return;
+      const html = `<div class='hike-map' id='hikeMap'><canvas id='hikeCanvas' width=520 height=280></canvas></div>`;
+      createPanel({id:'hikePanel',title:'Very Long Hike — Trail Simulation',left:120,top:420,width:540,height:320,html:html});
+      const c = document.getElementById('hikeCanvas'); const ctx = c.getContext('2d');
+      function drawTrail(){ ctx.clearRect(0,0,c.width,c.height);
+        // sky
+        const sky = ctx.createLinearGradient(0,0,0,c.height); sky.addColorStop(0,'#0b2b2a'); sky.addColorStop(1,'#032017'); ctx.fillStyle=sky; ctx.fillRect(0,0,c.width,c.height);
+        // layered mountains
+        for(let i=0;i<5;i++){ ctx.beginPath(); ctx.moveTo(0,c.height); for(let x=0;x<=c.width;x+=20){ const y = c.height - (50 + i*30) - Math.sin((x/40)+(i*1.1))*30 - (Math.random()*6); ctx.lineTo(x,y);} ctx.lineTo(c.width,c.height); ctx.fillStyle = `rgba(10,30,22,${0.08+i*0.06})`; ctx.fill(); }
+        // trail
+        ctx.beginPath(); ctx.moveTo(0,c.height-40); for(let x=0;x<=c.width;x+=10){ const y = c.height-40 - Math.sin(x/80)*18 - Math.pow((x-c.width/2)/(c.width/2),2)*20; ctx.lineTo(x,y);} ctx.lineWidth=6; ctx.strokeStyle='rgba(200,170,130,0.9)'; ctx.stroke();
+        // hikers (dots) representing many travellers
+        for(let i=0;i<18;i++){ const tx = (i/18)*c.width + (Math.sin(Date.now()/1200 + i)*8); const ty = c.height-40 - Math.sin(tx/80)*18 - Math.pow((tx-c.width/2)/(c.width/2),2)*20; ctx.beginPath(); ctx.arc(tx,ty-6,4,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill(); }
+      }
+      setInterval(drawTrail,80);
+    }
+
+    /* STATUES: generate a grid of stylized statues */
+    function genStatues(){ if(document.getElementById('statuesPanel')) return;
+      let html = `<div class='statues' id='statuesWrap'></div>`;
+      createPanel({id:'statuesPanel',title:'Hall of Statues',left:760,top:80,width:460,height:420,html:html});
+      const wrap = document.getElementById('statuesWrap');
+      for(let i=0;i<12;i++){ const s = document.createElement('div'); s.className='statue'; s.innerHTML = `<svg width=80 height=100 viewBox='0 0 80 100' style='transform:translateY(6px)'><defs><linearGradient id='g${i}' x1='0' x2='1'><stop offset='0' stop-color='#444'/><stop offset='1' stop-color='#111'/></linearGradient></defs><rect x=0 y=0 width=80 height=100 rx=8 fill='url(#g${i})' /></svg><div style='font-size:12px;margin-top:8px;color:var(--muted)'>Observer #${i+1}</div>`; wrap.appendChild(s); }
+    }
+
+    /* WINE: immersive tasting (modal) */
+    document.getElementById('btn-wine').addEventListener('click', ()=>{ document.getElementById('wineModal').style.display='flex'; });
+    document.getElementById('wineClose').addEventListener('click', ()=>{ document.getElementById('wineModal').style.display='none'; });
+    document.getElementById('wineStart').addEventListener('click', ()=>{
+      const v = document.getElementById('wineSelect').value; const notes = document.getElementById('wineNotes');
+      const pairings = ['aged cheddar & quince','dark chocolate & cherry','grilled mushrooms & thyme','seared tuna & citrus'];
+      notes.innerHTML = `<strong>${v}</strong><p style='margin-top:6px' class='small'>Aroma wheel: ${['fruit','earth','spice','oak'][Math.floor(Math.random()*4)]}. Suggested pairing: ${pairings[Math.floor(Math.random()*pairings.length)]}. Palate score: ${ (Math.random()*2+8).toFixed(1) } / 10</p>`;
+    });
+
+    /* MORSE CODE LAB */
+    function openMorse(){ if(document.getElementById('morsePanel')) return;
+      const html = `<div><textarea id='morseIn' placeholder='Type text here' style='width:100%;height:90px;border:var(--glass-border);background:transparent;color:inherit;padding:8px;border-radius:8px'></textarea><div style='display:flex;gap:8px;margin-top:8px'><button id='encodeM' class='btn'>Encode → Morse</button><button id='decodeM' class='glass-btn'>Decode → Text</button></div><div id='morseOut' style='margin-top:10px;color:var(--muted)'></div></div>`;
+      createPanel({id:'morsePanel',title:'Morse Code Lab',left:260,top:140,width:420,height:240,html:html});
+      const map = {A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',0:'-----',1:'.----',2:'..---',3:'...--',4:'....-',5:'.....',6:'-....',7:'--...',8:'---..',9:'----.'};
+      function encode(s){ return s.toUpperCase().split('').map(c=> map[c] || (c===' ' ? '/' : '?')).join(' '); }
+      function decode(m){ return m.split(' ').map(token=>{ if(token==='/' ) return ' '; const k = Object.keys(map).find(k=>map[k]===token); return k||'?'; }).join(''); }
+      document.getElementById('encodeM').addEventListener('click', ()=>{ const v=document.getElementById('morseIn').value; document.getElementById('morseOut').innerText = encode(v); });
+      document.getElementById('decodeM').addEventListener('click', ()=>{ const v=document.getElementById('morseIn').value; document.getElementById('morseOut').innerText = decode(v); });
+    }
+
+    /* TIKTOK feed: vertical swipe-like cards (placeholders) */
+    function openTikTok(){ if(document.getElementById('ttPanel')) return;
+      let html = `<div class='tiktok-feed' id='ttFeed'></div>`;
+      createPanel({id:'ttPanel',title:'Micro-Scroll: TikTok-style',left:420,top:420,width:360,height:540,html:html});
+      const feed = document.getElementById('ttFeed');
+      for(let i=0;i<6;i++){ const c=document.createElement('div'); c.className='tt-card'; c.innerHTML = `<div style='text-align:center'><div style='font-size:80px;opacity:0.08'>🎞️</div><div style='margin-top:12px'>Clip #${i+1}<div style='font-size:12px;color:var(--muted);margin-top:8px'>looping ambient — ${['dance','city','nature','cooking'][i%4]}</div></div></div>`; feed.appendChild(c); }
+    }
+
+    /* URBAN PLANNING GRID: editable blocks */
+    function openUrban(){ if(document.getElementById('urbanPanel')) return;
+      const html = `<div style='display:flex;gap:8px'><div id='gridWrap' style='width:420px;height:360px;overflow:auto;border-radius:8px;border:var(--glass-border);padding:8px;background:transparent'></div><div style='width:160px'><label>Tool</label><select id='urbanTool' style='width:100%;padding:8px;border-radius:8px;background:transparent;border:var(--glass-border)'><option value='park'>Park</option><option value='road'>Road</option><option value='building'>Building</option><option value='empty'>Empty</option></select><button id='exportPlan' class='btn' style='margin-top:8px'>Export Plan</button></div></div>`;
+      createPanel({id:'urbanPanel',title:'Urban Planning Grid',left:120,top:120,width:620,height:420,html:html});
+      const wrap = document.getElementById('gridWrap'); const sz=10; const grid=[]; wrap.innerHTML='';
+      const table = document.createElement('div'); table.style.display='grid'; table.style.gridTemplateColumns=`repeat(${sz},32px)`; table.style.gap='4px';
+      for(let y=0;y<sz;y++){ for(let x=0;x<sz;x++){ const cell = document.createElement('div'); cell.style.width='32px'; cell.style.height='32px'; cell.style.background='linear-gradient(180deg,#071018,#041018)'; cell.style.borderRadius='6px'; cell.style.border='1px solid rgba(255,255,255,0.02)'; cell.dataset.x=x; cell.dataset.y=y; cell.addEventListener('click', ()=>{ const t=document.getElementById('urbanTool').value; cell.dataset.type=t; cell.style.background = t==='park'? 'linear-gradient(180deg,#0b612f,#063d1e)': t==='road'? 'linear-gradient(180deg,#2b2b2b,#161616)': t==='building'? 'linear-gradient(180deg,#6b6b80,#2a2340)': 'linear-gradient(180deg,#071018,#041018)'; }); table.appendChild(cell); }}
+      wrap.appendChild(table);
+      document.getElementById('exportPlan').addEventListener('click', ()=>{ const plan=[]; table.querySelectorAll('[data-x]').forEach(cell=> plan.push({x:cell.dataset.x,y:cell.dataset.y,type:cell.dataset.type||'empty'})); const blob=new Blob([JSON.stringify(plan)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='plan.json'; a.click(); URL.revokeObjectURL(url); });
+    }
+
+    /* OBSERVERS: generate many small observer nodes that watch each other */
+    function openObservers(){ if(document.getElementById('observersPanel')) return;
+      createPanel({id:'observersPanel',title:'Observers — Meta Overseers',left:1160,top:120,width:300,height:420,html:'<div style="font-size:13px;color:var(--muted)">Simulating many watchers — click Reconfigure to create 10k+ light-weight observers (visualized summary only).</div><div style="display:flex;gap:8px;margin-top:8px"><button id="makeMany" class="btn">Make 10k</button><button id="reseed" class="glass-btn">Reconfigure</button></div><div id="obsStats" style="margin-top:10px;color:var(--muted)"></div>'});
+      document.getElementById('makeMany').addEventListener('click', ()=>{
+        const N = 10000; // lightweight simulated
+        const stats = document.getElementById('obsStats');
+        // create adjacency probabilistically and show aggregate
+        let edges=0; for(let i=0;i<N;i++){ edges += Math.floor(Math.random()*4); }
+        stats.innerText = `Simulated ${N.toLocaleString()} observers with ~${edges.toLocaleString()} watching links. (Visualization reduced for performance)`;
+        // update right-hand small overlay with a condensed sample
+        const pane = document.getElementById('observersPane'); pane.innerHTML = '<strong style="display:block;margin-bottom:8px">Observers (sample)</strong>';
+        for(let i=0;i<20;i++){ const o=document.createElement('div'); o.className='observer'; o.innerHTML = `<div class='eye'></div><div style='font-size:12px;color:var(--muted)'>Observer ${i+1} — watching ${Math.floor(Math.random()*20)+1}</div>`; pane.appendChild(o);}      });
+    }
+
+    /* Randomize scene */
+    document.getElementById('randomize').addEventListener('click', ()=>{
+      // spawn a few panels randomly
+      openPinball(); openHike(); genStatues(); openTikTok(); openUrban(); openMorse(); openObservers();
+    });
+
+    // wire sidebar buttons
+    document.getElementById('btn-pinball').addEventListener('click', openPinball);
+    document.getElementById('btn-hike').addEventListener('click', openHike);
+    document.getElementById('btn-statues').addEventListener('click', genStatues);
+    document.getElementById('btn-morse').addEventListener('click', openMorse);
+    document.getElementById('btn-tiktok').addEventListener('click', openTikTok);
+    document.getElementById('btn-urban').addEventListener('click', openUrban);
+    document.getElementById('btn-observers').addEventListener('click', openObservers);
+
+    // snapshot
+    document.getElementById('save-snapshot').addEventListener('click', ()=>{
+      html2canvas(document.querySelector('.stage')).then(canvas=>{
+        const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='12T_scene.png'; a.click();
+      }).catch(()=>alert('Snapshot requires html2canvas. Include it for full snapshot support.'));
+    });
+
+    /* OPTIONAL: fallback load initial scene */
+    setTimeout(()=>{ document.getElementById('randomize').click(); },400);
+
+    // small helpers: include a tiny html2canvas stub so snapshot fails gracefully if missing
+    if(!window.html2canvas){ window.html2canvas = null; }
+  </script>
+
+  <!-- NOTE: To enable snapshot export, include html2canvas before saving. Add this line above closing </body> if you want: 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  -->
+</body>
+</html>
